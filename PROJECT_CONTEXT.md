@@ -120,3 +120,5 @@ This is temporary. It makes the most recent submitted link survive refreshes on 
 - Docker must be started before testing any frontend link-creation flow.
 - The frontend uses `http://localhost:8080` by default. It can be overridden with `NEXT_PUBLIC_API_URL` when deploying.
 - The host environment used by the coding agent did not have `node`/`npm` on its PATH, so frontend lint/build checks must be run from the user's development terminal.
+
+// Above contect before 15 October 2026
