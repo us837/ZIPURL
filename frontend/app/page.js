@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import { useState } from 'react';
+import { SiteFooter, SiteHeader } from './components/SiteChrome';
 import QrDesigner from './QrDesigner';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -62,19 +62,12 @@ export default function Home() {
   };
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#071329] text-white">
+    <main className="relative isolate flex min-h-screen flex-col overflow-hidden bg-[#071329] text-white">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_84%_8%,rgba(35,95,217,0.18),transparent_22rem),radial-gradient(circle_at_14%_92%,rgba(12,96,120,0.17),transparent_25rem)]" />
       <div aria-hidden="true" className="pointer-events-none absolute right-[12%] top-28 text-3xl text-blue-300/30">✦</div>
       <div aria-hidden="true" className="pointer-events-none absolute right-[6%] top-[38%] text-lg text-cyan-200/20">✧</div>
       <div aria-hidden="true" className="pointer-events-none absolute bottom-24 right-[16%] text-5xl text-blue-300/15">✦</div>
-
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-5 py-5 sm:px-8">
-        <a href="#top" aria-label="ZIPURL home" className="shrink-0"><Image src="/zipurl-logo.svg" alt="ZIPURL" width={140} height={62} priority className="h-11 w-auto" /></a>
-        <nav aria-label="Primary navigation" className="hidden items-center gap-6 text-sm font-medium text-slate-300 lg:flex">
-          <a href="#platform" className="transition hover:text-white">Platform <span aria-hidden="true">⌄</span></a><a href="#ai" className="transition hover:text-white">AI <span aria-hidden="true">⌄</span></a><a href="#solutions" className="transition hover:text-white">Solutions <span aria-hidden="true">⌄</span></a><a href="#pricing" className="transition hover:text-white">Pricing</a><a href="#resources" className="transition hover:text-white">Resources <span aria-hidden="true">⌄</span></a>
-        </nav>
-        <div className="flex items-center gap-2 text-sm font-semibold sm:gap-3"><a href="/login" className="hidden rounded-lg px-2 py-2 text-white transition hover:text-slate-300 sm:block">Log in</a><button type="button" className="hidden rounded-lg border border-slate-500/80 px-3 py-2 text-white transition hover:border-white hover:bg-white/5 sm:block">Get a Quote</button><a href="/signup" className="rounded-lg bg-white px-3 py-2 text-slate-950 transition hover:bg-slate-200 sm:px-4">Sign up Free</a></div>
-      </header>
+      <SiteHeader />
 
       <section id="top" className="mx-auto flex w-full max-w-5xl flex-col items-center px-5 pb-16 pt-12 text-center sm:px-8 sm:pt-20 lg:pb-24">
         <p className="mb-5 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">Smarter links, bigger reach</p>
@@ -98,8 +91,9 @@ export default function Home() {
           </div>
         </section>
 
-        <div id="pricing" className="mt-10 flex w-full max-w-3xl flex-col items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-4 text-sm text-slate-300 sm:flex-row sm:text-left"><span className="font-semibold text-white">Sign up for free. Your free plan includes:</span><div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs sm:justify-end"><span className="flex items-center gap-1.5"><CheckIcon />5 short links/month</span><span className="flex items-center gap-1.5"><CheckIcon />3 custom back-halves/month</span><span className="flex items-center gap-1.5"><CheckIcon />Unlimited link clicks</span></div></div>
+        <div className="mt-10 flex w-full max-w-3xl flex-col items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-4 text-sm text-slate-300 sm:flex-row sm:text-left"><span className="font-semibold text-white">Sign up for free. Your free plan includes:</span><div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs sm:justify-end"><span className="flex items-center gap-1.5"><CheckIcon />5 short links/month</span><span className="flex items-center gap-1.5"><CheckIcon />3 custom back-halves/month</span><span className="flex items-center gap-1.5"><CheckIcon />Unlimited link clicks</span></div></div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

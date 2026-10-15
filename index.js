@@ -69,6 +69,17 @@ async function rateLimiter(req, res, next) {
     }
 }
 
+app.get('/health', async (_req, res) => {
+    try {
+        await pool.query('SELECT 1');
+        const redisReady = redisClient.isOpen;
+        res.json({ ok: true, postgres: true, redis: redisReady });
+    } catch (err) {
+        console.error('Health check failed:', err);
+        res.status(503).json({ ok: false, error: 'Service unavailable' });
+    }
+});
+
 // Endpoint: Shorten a URL (Protected with Rate Limiter)
 app.post('/api/shorten', rateLimiter, async (req, res) => {
     const { longUrl } = req.body;
