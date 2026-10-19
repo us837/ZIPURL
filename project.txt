@@ -1,0 +1,273 @@
+================================================================================
+
+                       ZIPURL - PROJECT ARCHITECTURE & GUIDE
+
+================================================================================
+
+
+
+1. EXECUTIVE OVERVIEW
+
+--------------------------------------------------------------------------------
+
+ZIPURL is a high-performance, production-ready full-stack URL shortener. 
+
+The system accepts long URLs, converts them into compact, unique Base62 
+
+hashes, and handles fast redirection. It relies on a decoupled monorepo 
+
+architecture leveraging serverless compute, managed relational databases, 
+
+in-memory caching, and custom domain routing.
+
+
+
+
+
+2. SYSTEM ARCHITECTURE & DATA FLOW
+
+--------------------------------------------------------------------------------
+
+Architecture Pattern: Monorepo
+
+- Root Directory (`/`): Node.js / Express backend server.
+
+- Subfolder (`/frontend`): Next.js React frontend user interface.
+
+
+
+Data Flow Diagram:
+
+[ User Browser ]
+
+       |
+
+       +---> (1) Renders Frontend UI: https://zipurl.ujwalsharma.space (Vercel)
+
+       |
+
+       +---> (2) Makes API Request (POST /shorten)
+
+       |            |
+
+       |            v
+
+       |     [ Express API Server ] (Render Cloud)
+
+       |            |
+
+       |            +---> (3) Check/Set Rate Limits & Cache
+
+       |            |        |
+
+       |            |        v
+
+       |            |     [ Upstash Redis ] (In-Memory Cache)
+
+       |            |
+
+       |            +---> (4) Store Original URL & Short Code
+
+       |                     |
+
+       |                     v
+
+       |                  [ Neon PostgreSQL ] (Serverless DB)
+
+       |
+
+       +---> (5) Redirect Request (GET /:shortCode)
+
+                    |
+
+                    v
+
+             Fetch from Upstash Cache (Fast Path) 
+
+             --> Fallback to Neon DB if Cache Miss
+
+
+
+
+
+3. TOOLS, SERVICES, & PACKAGES USED
+
+--------------------------------------------------------------------------------
+
+
+
+[ BACKEND STACK ]
+
+* Node.js & Express
+
+  - Purpose: Core backend web server and REST API implementation.
+
+  - Why used: Lightweight, highly efficient for I/O-heavy workloads like 
+
+    handling URL redirections.
+
+
+
+* Neon (Serverless PostgreSQL)
+
+  - Purpose: Primary relational database for persistent URL records and metadata.
+
+  - Why used: Provides serverless architecture with auto-scaling capabilities, 
+
+    ensuring low cost with high availability.
+
+
+
+* Upstash Redis
+
+  - Purpose: In-memory cache layer and API rate limiting engine.
+
+  - Why used: Extremely low latency for cached URL lookups during redirection. 
+
+    Connects seamlessly over HTTP/REST, preventing connection pool exhaustion 
+
+    in cloud environments.
+
+
+
+* Base62 Encoding Algorithm
+
+  - Purpose: Converts auto-incrementing integer IDs or random string hashes 
+
+    into short, human-readable codes containing [a-z, A-Z, 0-9].
+
+  - Why used: Provides high density for short codes without special characters 
+
+    that could break URL formats.
+
+
+
+* CORS Middleware (`cors`)
+
+  - Purpose: Handles Cross-Origin Resource Sharing settings on the backend.
+
+  - Why used: Enables the Vercel frontend domain to make API requests safely 
+
+    to the Render backend domain without browser security blocks.
+
+
+
+* dotenv
+
+  - Purpose: Manages environment-specific configuration values locally.
+
+  - Why used: Prevents sensitive secrets (database passwords, API keys) from 
+
+    being hardcoded or exposed in Git repositories.
+
+
+
+[ FRONTEND STACK ]
+
+* Next.js (React Framework)
+
+  - Purpose: Modern UI component framework rendering the web application.
+
+  - Why used: Fast rendering, optimal performance, and effortless deployment 
+
+    integration with Vercel.
+
+
+
+* Tailwind CSS
+
+  - Purpose: Utility-first CSS styling framework.
+
+  - Why used: Rapid, responsive layout building with small bundle sizes.
+
+
+
+[ INFRASTRUCTURE & HOSTING ]
+
+* Render (Backend Hosting)
+
+  - Purpose: Hosts the Express Node.js web web application.
+
+  - Why used: Simple continuous integration from GitHub repositories with native 
+
+    environment variable management.
+
+
+
+* Vercel (Frontend Hosting)
+
+  - Purpose: Hosts the Next.js frontend application.
+
+  - Why used: Native support for Next.js, automated global CDN distribution, 
+
+    and built-in custom domain/SSL management.
+
+
+
+* Hostinger (DNS Provider)
+
+  - Purpose: Manages domain name records (`ujwalsharma.space`).
+
+  - Why used: Routes the custom subdomain `zipurl.ujwalsharma.space` to Vercel 
+
+    servers via CNAME record mapping.
+
+
+
+
+
+4. DEPLOYMENT & NETWORKING CONFIGURATION
+
+--------------------------------------------------------------------------------
+
+
+
+1. Monorepo Setup:
+
+   - Root Directory configured for backend dependencies (`package.json`).
+
+   - `/frontend` subfolder contains frontend dependencies and Next.js setup.
+
+
+
+2. Vercel Frontend Configuration:
+
+   - Root Directory set explicitly to `frontend`.
+
+   - Build environment variable configured:
+
+     `NEXT_PUBLIC_API_URL` = `https://zipurl-jzyv.onrender.com`
+
+
+
+3. Custom Subdomain Routing:
+
+   - CNAME Record in Hostinger DNS:
+
+     * Host/Name: `zipurl`
+
+     * Type: `CNAME`
+
+     * Value/Target: `<unique-vercel-dns-string>.vercel-dns-017.com.`
+
+   - Subdomain resolves smoothly to `https://zipurl.ujwalsharma.space`.
+
+
+
+
+
+5. SECURITY & BEST PRACTICES REMINDERS
+
+--------------------------------------------------------------------------------
+
+* Git Hygiene: Keep `.env` explicitly declared inside `.gitignore`. Never commit 
+
+  secrets or database URIs to public or private version control.
+
+* Credential Rotation: If `.env` is ever accidentally tracked by Git, 
+
+  immediately untrack it using `git rm --cached .env` and rotate all exposed 
+
+  database and API credentials.
+
+================================================================================
