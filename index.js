@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
-const { Pool } = require('pg');
 const { createClient } = require('redis');
+const { Pool } = require('pg');
 const cors = require('cors');
 
 const app = express();
@@ -37,15 +37,13 @@ const pool = new Pool({
 // redisClient.on('error', (err) => console.error('Redis Client Error', err));
 
 // Redis Client Connection with TLS support for Upstash
-const { createClient } = require('redis');
-
+// Redis Client Setup
 const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const isSecure = redisUrl.startsWith('rediss://');
 
 const redisClient = createClient({
     url: redisUrl,
     socket: {
-        // Force TLS options for Upstash cloud connection
         tls: isSecure ? { rejectUnauthorized: false } : undefined,
         reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
     }
@@ -53,7 +51,6 @@ const redisClient = createClient({
 
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));
 
-// Connect asynchronously without blocking server start
 (async () => {
     try {
         await redisClient.connect();
