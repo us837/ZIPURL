@@ -16,14 +16,25 @@ const pool = new Pool({
 });
 
 // Redis Client Connection
+// const redisClient = createClient({
+//     url: process.env.REDIS_URL || 'redis://redis:6379',
+//     socket: {
+//         reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
+//     }
+// });
+
+// redisClient.on('error', (err) => console.error('Redis Client Error:', err));
+
+// Redis Client Connection
 const redisClient = createClient({
-    url: process.env.REDIS_URL || 'redis://redis:6379',
+    url: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
     socket: {
+        tls: process.env.REDIS_URL?.startsWith('rediss://') ? true : undefined,
         reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
     }
 });
 
-redisClient.on('error', (err) => console.error('Redis Client Error:', err));
+redisClient.on('error', (err) => console.error('Redis Client Error', err));
 
 // Base62 Algorithm
 const CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";

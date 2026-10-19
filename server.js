@@ -16,8 +16,18 @@ const pool = new Pool({
 });
 
 // 2. Redis Connection
+// const redisClient = createClient({
+//     url: process.env.REDIS_URL || 'redis://localhost:6379'
+// });
+
+// redisClient.on('error', (err) => console.error('Redis Client Error', err));
+
 const redisClient = createClient({
-    url: process.env.REDIS_URL || 'redis://localhost:6379'
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    socket: {
+        // Automatically enables TLS if connecting via Upstash rediss://
+        tls: process.env.REDIS_URL?.startsWith('rediss://') ? true : undefined
+    }
 });
 
 redisClient.on('error', (err) => console.error('Redis Client Error', err));
