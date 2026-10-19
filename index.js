@@ -15,50 +15,19 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
 });
 
-// Redis Client Connection
-// const redisClient = createClient({
-//     url: process.env.REDIS_URL || 'redis://redis:6379',
-//     socket: {
-//         reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
-//     }
-// });
-
-// redisClient.on('error', (err) => console.error('Redis Client Error:', err));
-
-// Redis Client Connection
-// const redisClient = createClient({
-//     url: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
-//     socket: {
-//         tls: process.env.REDIS_URL?.startsWith('rediss://') ? true : undefined,
-//         reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
-//     }
-// });
-
-// redisClient.on('error', (err) => console.error('Redis Client Error', err));
-
-// Redis Client Connection with TLS support for Upstash
 // Redis Client Setup
 const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
-const isSecure = redisUrl.startsWith('rediss://');
 
 const redisClient = createClient({
     url: redisUrl,
     socket: {
-        tls: isSecure ? { rejectUnauthorized: false } : undefined,
+        // Force TLS for rediss:// connections
+        tls: redisUrl.startsWith('rediss://') ? { rejectUnauthorized: false } : undefined,
         reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
     }
 });
 
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));
-
-(async () => {
-    try {
-        await redisClient.connect();
-        console.log('Redis connected successfully.');
-    } catch (err) {
-        console.error('Failed to connect to Redis:', err);
-    }
-})();
 
 // Base62 Algorithm
 const CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -186,8 +155,10 @@ async function start() {
         console.log('PostgreSQL connected successfully.');
 
         console.log('Connecting to Redis...');
-        await redisClient.connect();
-        console.log('Redis connected successfully.');
+        if (!redisClient.isOpen) {
+            await redisClient.connect();
+            console.log('Redis connected successfully.');
+        }
 
         app.listen(PORT, '0.0.0.0', () => {
             console.log(`ZIPURL server running live on port ${PORT}`);
@@ -199,3 +170,5 @@ async function start() {
 }
 
 start();
+
+
