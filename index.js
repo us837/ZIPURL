@@ -21,8 +21,6 @@ const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const redisClient = createClient({
     url: redisUrl,
     socket: {
-        // Force TLS for rediss:// connections
-        tls: redisUrl.startsWith('rediss://') ? { rejectUnauthorized: false } : undefined,
         reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
     }
 });
