@@ -1,0 +1,145 @@
+================================================================================
+
+               ZIPURL - TROUBLESHOOTING & SECURITY RECOVERY GUIDE
+
+================================================================================
+
+
+
+This document outlines common failure modes, diagnostic steps, and recovery 
+
+playbooks for the ZIPURL full-stack architecture (Vercel, Render, Neon, Upstash, Hostinger).
+
+
+
+--------------------------------------------------------------------------------
+
+1. SECURITY INCIDENT: ACCIDENTAL .ENV COMMIT TO GITHUB
+
+--------------------------------------------------------------------------------
+
+* Symptom: A `.env` file containing database connection strings or API keys is visible 
+
+  in your public or private GitHub repository.
+
+* Root Cause: `.gitignore` omitted `.env` or tracking was initialized before `.gitignore` 
+
+  was created.
+
+* Recovery Steps:
+
+  1. Update `.gitignore` to explicitly include `.env` on its own line.
+
+  2. Remove the file from Git tracking without deleting it locally:
+
+     `git rm --cached .env`
+
+  3. Commit and push the fix:
+
+     `git add .gitignore && git commit -m "Fix: remove .env from tracking" && git push`
+
+  4. Immediately rotate all compromised credentials:
+
+     - Neon: Reset/rotate your database connection password in the Neon console.
+
+     - Upstash: Rotate your Redis REST token/password.
+
+     - Render/Vercel: Update environment variables with the new credentials.
+
+
+
+
+
+--------------------------------------------------------------------------------
+
+2. DOMAIN & DNS FAILURE MODES
+
+--------------------------------------------------------------------------------
+
+* Failure 1: Vercel shows "Invalid Configuration" for `zipurl.ujwalsharma.space`.
+
+  - Cause: Hostinger DNS record is either missing, mistyped, or conflicting with an old ALIAS/A record.
+
+  - Fix: Ensure the conflicting `ALIAS` record for `zipurl` in Hostinger is deleted. Add a clean `CNAME` record with Name `zipurl` pointing to the exact Vercel target string (e.g., `cname.vercel-dns.com` or Vercel's provided unique verification hash).
+
+
+
+* Failure 2: SSL/TLS Certificate Issuance Delayed.
+
+  - Cause: DNS propagation delay or CAA record restrictions.
+
+  - Fix: Wait up to 15-30 minutes for global DNS propagation and Vercel automated SSL provisioning. Verify that no strict CAA records block Let's Encrypt/Vercel.
+
+
+
+
+
+--------------------------------------------------------------------------------
+
+3. BACKEND & API OUTAGES (RENDER)
+
+--------------------------------------------------------------------------------
+
+* Failure 1: Application returns 502 Bad Gateway or crashes on startup.
+
+  - Cause: Missing environment variables on Render, or incorrect `package.json` start script.
+
+  - Fix: Check Render logs. Ensure `PORT` and database connection strings (`DATABASE_URL`) are populated in Render's Environment settings. Verify start script is set to `node server.js` (or equivalent).
+
+
+
+* Failure 2: Render Cold Start Delays.
+
+  - Cause: Free tier instances spin down after 15 minutes of inactivity.
+
+  - Fix: Normal behavior for free tiers; the first request may take 30–50 seconds to respond as the container wakes up.
+
+
+
+
+
+--------------------------------------------------------------------------------
+
+4. DATABASE & CACHE FAILURES (NEON & UPSTASH)
+
+--------------------------------------------------------------------------------
+
+* Failure 1: Database connection timeout or pool exhaustion.
+
+  - Cause: Too many concurrent connections or dropped serverless connections.
+
+  - Fix: Ensure your backend uses connection pooling or closes client instances correctly. Verify Neon branch status is active.
+
+
+
+* Failure 2: Upstash Redis connection error.
+
+  - Cause: Expired tokens, network timeout, or incorrect REST URL/token environment variables.
+
+  - Fix: Copy fresh REST credentials from the Upstash console and update them in Render environment variables.
+
+
+
+
+
+--------------------------------------------------------------------------------
+
+5. CROSS-ORIGIN RESOURCE SHARING (CORS) ERRORS
+
+--------------------------------------------------------------------------------
+
+* Symptom: Frontend fails to fetch from backend, browser console throws CORS policy block.
+
+  - Cause: Express server is missing CORS headers allowing the Vercel domain.
+
+  - Fix: In your Express backend (`server.js`), ensure CORS middleware is enabled:
+
+    ```javascript
+
+    const cors = require('cors');
+
+    app.use(cors({ origin: ['https://zipurl.ujwalsharma.space', 'http://localhost:3000'] }));
+
+    ```
+
+================================================================================
