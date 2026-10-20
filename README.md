@@ -34,4 +34,4 @@ Copy and share your generated short URL anywhere!
 
 📄 License
 
-This project is open-source and available for learning and personal use.
+This project is open-source & available for learning and personal use.
